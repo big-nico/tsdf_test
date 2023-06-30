@@ -44,7 +44,7 @@ if __name__ == "__main__":
     points, faces, normals, colors = tsdf_volume.get_mesh()
     mesh = Ply(triangles=faces, points=points, normals=normals, colors=colors)
     mesh.write(os.path.join('supplemental', 'mesh.ply'))
-
+    
     # Get point cloud from voxel volume and save to disk (can be viewed with Meshlab)
     print("Saving point cloud to point_cloud.ply...")
     pc = Ply(points=points, normals=normals, colors=colors)

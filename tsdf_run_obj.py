@@ -131,10 +131,10 @@ if __name__ == "__main__":
         far=10.0,
         fov_w=70.0,
     )
-    camera_intrensics = np.loadtxt("use_apple/use_apple_instrinsics.txt", delimiter=' ')
+    camera_intrensics = np.loadtxt("data/use_apple/use_apple_instrinsics.txt", delimiter=' ')
 
     #load the pcd file
-    pcd = o3d.io.read_point_cloud("use_apple/use_apple_gt_pointcloud.pcd")
+    pcd = o3d.io.read_point_cloud("data/use_apple/use_apple_gt_pointcloud.pcd")
 
     points = np.asarray(pcd.points)
     
@@ -169,9 +169,9 @@ if __name__ == "__main__":
         print("Fusing frame %d/%d"%(i+1, image_count))
 
         # Read RGB-D image and camera pose
-        color_image = read_rgb("use_apple/images/use_apple_image_{}.jpg".format(i))
-        depth_image = read_depth("use_apple/depths/use_apple_depth_{}.png".format(i))
-        camera_pose = cam_view2pose(np.load("use_apple/views/use_apple_view_matrix_{}.npy".format(i)))
+        color_image = read_rgb("data/use_apple/images/use_apple_image_{}.jpg".format(i))
+        depth_image = read_depth("data/use_apple/depths/use_apple_depth_{}.png".format(i))
+        camera_pose = cam_view2pose(np.load("data/use_apple/views/use_apple_view_matrix_{}.npy".format(i)))
 
         # Integrate observation into voxel volume (assume color aligned with depth)
         tsdf_volume.integrate(color_image, depth_image, camera_intrensics, camera_pose, observation_weight=1.)
