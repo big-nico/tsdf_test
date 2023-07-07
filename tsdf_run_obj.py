@@ -144,24 +144,20 @@ if __name__ == "__main__":
     ax.scatter(points[:,0], points[:,1], points[:,2])
     plt.show()
 
-    #get the volume bounds 
-    min_x = np.min(points[:,0])
-    max_x = np.max(points[:,0])
-    min_y = np.min(points[:,1])
-    max_y = np.max(points[:,1])
-    min_z = np.min(points[:,2])
-    max_z = np.max(points[:,2])
-
-    volume_bounds = np.array([[min_x, max_x], [min_y, max_y], [min_z, max_z]])
-
-    print(volume_bounds)
+    volume_bounds = np.array([[0.8,1.1], [-0.04, 0.08], [0, 0.6]])
 
     #find a good voxel size based on the volume bounds
-    voxel_size = (max_x - min_x)/200
+    voxel_size = 0.001
 
     # Initialize voxel volume
     print("Initializing voxel volume...")
     tsdf_volume = tsdf.TSDFVolume(volume_bounds, voxel_size=voxel_size)
+
+    #Get the instrinsic matrix
+    intrinsic_matrix = np.loadtxt("data/use_apple/use_apple_instrinsics.txt", delimiter=' ')
+
+    #initialize global pointcloud
+    global_pointcloud = np.zeros((0,3))
 
     # Loop through RGB-D images and fuse them together
     start_time = time.time()
@@ -171,7 +167,21 @@ if __name__ == "__main__":
         # Read RGB-D image and camera pose
         color_image = read_rgb("data/use_apple/images/use_apple_image_{}.jpg".format(i))
         depth_image = read_depth("data/use_apple/depths/use_apple_depth_{}.png".format(i))
-        camera_pose = cam_view2pose(np.load("data/use_apple/views/use_apple_view_matrix_{}.npy".format(i)))
+        camera_pose = np.loadtxt("data/use_apple/poses/use_apple_pose_{}.txt".format(i), delimiter=' ')
+        # camera_pose = cam_view2pose(np.load("data/use_apple/views/use_apple_view_matrix_{}.npy".format(i)))
+
+        #convert the depth image to a point cloud
+        cam_pts = depth_to_point_cloud(intrinsic_matrix, depth_image)
+
+        world_pts = transform_point3s(camera_pose, cam_pts)
+
+        #add to global pointcloud
+        global_pointcloud = np.unique(np.concatenate((global_pointcloud, world_pts), axis=0), axis=0)
+
+        # visualize using open3d
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(global_pointcloud)
+        o3d.visualization.draw_geometries([pcd])
 
         # Integrate observation into voxel volume (assume color aligned with depth)
         tsdf_volume.integrate(color_image, depth_image, camera_intrensics, camera_pose, observation_weight=1.)
